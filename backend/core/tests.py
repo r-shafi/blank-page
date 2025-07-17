@@ -45,6 +45,17 @@ class CoreUtilsTests(TestCase):
         new_instance = TestModel(title='Test Title')
         unique_slug = generate_unique_slug(new_instance, 'title')
         self.assertEqual(unique_slug, 'test-title-1')
+        
+        # Test non-Latin scripts (Bangla)
+        bangla_instance = TestModel(title='গোপালগঞ্জে কারফিউ')
+        bangla_slug = generate_unique_slug(bangla_instance, 'title')
+        self.assertEqual(bangla_slug, 'gopaalgnyje-kaarphiu')
+        
+        # Test empty/special characters fallback
+        special_instance = TestModel(title='###')
+        special_slug = generate_unique_slug(special_instance, 'title')
+        self.assertTrue(special_slug.startswith('item-'))
+        self.assertEqual(len(special_slug), 13)  # 'item-' + 8 random chars
 
     def test_validate_image_url(self):
         valid_urls = [

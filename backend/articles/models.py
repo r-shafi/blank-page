@@ -3,7 +3,7 @@ from django.utils.text import slugify
 from users.models import User
 from categories.models import Category
 from tags.models import Tag
-from core.utils import compress_image
+from core.utils import compress_image, generate_unique_slug
 
 
 class Article(models.Model):
@@ -42,7 +42,7 @@ class Article(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = generate_unique_slug(self, 'title')
 
         if self.content:
             words_per_minute = 200

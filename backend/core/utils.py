@@ -4,6 +4,7 @@ import operator
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
+from unidecode import unidecode
 import logging
 import traceback
 from django.core.cache import cache
@@ -64,8 +65,27 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 def generate_unique_slug(model_instance, slugify_field_name, slug=None):
+    """
+    Generate a unique slug for a model instance, supporting non-Latin scripts.
+    
+    Args:
+        model_instance: The model instance
+        slugify_field_name: The field name to generate slug from
+        slug: Optional custom slug to use instead of generating from field
+    
+    Returns:
+        str: A unique slug for the model instance
+    """
     if slug is None:
-        slug = slugify(getattr(model_instance, slugify_field_name))
+        original_text = getattr(model_instance, slugify_field_name)
+        # Transliterate non-Latin scripts to Latin characters
+        transliterated_text = unidecode(original_text)
+        slug = slugify(transliterated_text)
+        
+        # If slug is still empty after transliteration, use a fallback
+        if not slug:
+            slug = f"item-{get_random_string(8).lower()}"
+    
     unique_slug = slug
     extension = 1
 
