@@ -5,7 +5,7 @@ import {
 } from '@/hooks/use-article-actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Bookmark, BookmarkCheck, Heart, HeartHandshake } from 'lucide-react';
+import { Bookmark, BookmarkCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
 
 interface ArticleActionsProps {
   article: {
@@ -86,7 +86,7 @@ export function ArticleActions({ article }: ArticleActionsProps) {
         disabled={reactionMutation.isPending}
         className="flex items-center gap-2"
       >
-        <Heart
+        <ThumbsUp
           className={`h-4 w-4 ${
             article.user_reaction === 'like' ? 'fill-current' : ''
           }`}
@@ -102,7 +102,7 @@ export function ArticleActions({ article }: ArticleActionsProps) {
         disabled={reactionMutation.isPending}
         className="flex items-center gap-2"
       >
-        <HeartHandshake
+        <ThumbsDown
           className={`h-4 w-4 ${
             article.user_reaction === 'dislike' ? 'fill-current' : ''
           }`}
