@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotFound
 from django.http import Http404
 from .models import Article
 from .serializers import ArticleSerializer
+from comments.serializers import CommentSerializer
 from core.utils import get_search_filter, log_action, log_exception, compress_image
 from core.permissions import IsAuthorOrReadOnly
 import os
@@ -222,8 +223,25 @@ class ArticleBySlugView(generics.RetrieveAPIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        # Get comments for this article
+        comments = instance.comments.filter(
+            status='approved',
+            parent=None  # Only top-level comments
+        ).order_by('-created_at')
+        
+        # Serialize article and comments
+        article_serializer = self.get_serializer(instance)
+        comments_serializer = CommentSerializer(
+            comments, 
+            many=True, 
+            context={'request': request}
+        )
+        
+        # Combine data
+        data = article_serializer.data
+        data['comments'] = comments_serializer.data
+        
+        return Response(data)
 
 
 class PopularArticlesView(generics.ListAPIView):

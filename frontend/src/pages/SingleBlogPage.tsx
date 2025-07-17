@@ -1,6 +1,6 @@
 import { ArticleActions } from '@/components/articles/ArticleActions';
 import Layout from '@/components/layout/Layout';
-import Comments from '@/components/SingleBlog/Comments';
+import CommentsEnhanced from '@/components/SingleBlog/CommentsEnhanced';
 import RelatedArticles from '@/components/SingleBlog/RelatedArticles';
 import SocialShare from '@/components/SingleBlog/SocialShare';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useArticleDetail } from '@/hooks/use-article-detail';
 import { articlesApi } from '@/lib/api/articles';
 import { getAvatarUrl } from '@/lib/utils/avatar';
+import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -33,11 +34,15 @@ const ArticleSkeleton = () => (
 const SingleBlogPage = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
-  const [comments, setComments] = useState([]);
   const [displayViews, setDisplayViews] = useState(0);
+  const queryClient = useQueryClient();
 
   const { article, isLoading, error, relatedArticles, isLoadingRelated } =
     useArticleDetail(slug);
+
+  const handleCommentsUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['article', slug] });
+  };
 
   // Update display views when article is loaded
   useEffect(() => {
@@ -74,23 +79,6 @@ const SingleBlogPage = () => {
   if (!article) {
     return null;
   }
-
-  const handleAddComment = (newComment) => {
-    if (newComment.type === 'comment') {
-      setComments((prevComments) => [...prevComments, newComment.comment]);
-    } else if (newComment.type === 'reply') {
-      setComments((prevComments) =>
-        prevComments.map((comment) =>
-          comment.id === newComment.commentId
-            ? {
-                ...comment,
-                replies: [...(comment.replies || []), newComment.reply],
-              }
-            : comment
-        )
-      );
-    }
-  };
 
   const shareUrl = window.location.href;
 
@@ -177,10 +165,10 @@ const SingleBlogPage = () => {
             </Card>
           )}
 
-          <Comments
+          <CommentsEnhanced
             articleId={article.id}
-            comments={comments}
-            onAddComment={handleAddComment}
+            comments={article.comments || []}
+            onCommentsUpdate={handleCommentsUpdate}
           />
         </article>
       </div>
