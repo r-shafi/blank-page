@@ -43,7 +43,7 @@ import {
   Send,
   X,
 } from 'lucide-react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useNavigate } from 'react-router-dom';
@@ -360,11 +360,24 @@ function PreviewPanel({
   content,
   title,
   excerpt,
+  featuredImage,
 }: {
   content: string;
   title: string;
   excerpt: string;
+  featuredImage: File | null;
 }) {
+  const featuredImageUrl = featuredImage ? URL.createObjectURL(featuredImage) : null;
+
+  // Cleanup object URL when component unmounts or image changes
+  useEffect(() => {
+    return () => {
+      if (featuredImageUrl) {
+        URL.revokeObjectURL(featuredImageUrl);
+      }
+    };
+  }, [featuredImageUrl]);
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -374,6 +387,15 @@ function PreviewPanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {featuredImageUrl && (
+          <div className="w-full">
+            <img
+              src={featuredImageUrl}
+              alt="Featured image preview"
+              className="w-full h-48 object-cover rounded-lg border"
+            />
+          </div>
+        )}
         {title && (
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
@@ -390,7 +412,7 @@ function PreviewPanel({
             dangerouslySetInnerHTML={{ __html: content }}
           />
         )}
-        {!title && !excerpt && !content && (
+        {!title && !excerpt && !content && !featuredImage && (
           <div className="flex items-center justify-center h-40 text-muted-foreground">
             Start typing to see preview...
           </div>
@@ -851,6 +873,7 @@ export default function WriteBlogPageEnhanced() {
               title={watchedValues.title || ''}
               excerpt={watchedValues.excerpt || ''}
               content={content}
+              featuredImage={featuredImage}
             />
           </div>
         </div>
